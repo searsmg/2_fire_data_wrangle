@@ -1,7 +1,7 @@
 ---
 title: "Hayman Fire Recovery"
-author: "Matthew Ross"
-date: "10/3/2019"
+author: "Megan Sears"
+date: "2022-01-31"
 output: html_document
 ---
 
@@ -21,7 +21,7 @@ knitr::opts_knit$set(root.dir='..')
 ```{r dataread, warning=F,message=F}
 ####-----Reading in Data and Stacking it ----- ####
 #Reading in files
-files <- list.files('data',full.names=T)
+files <- list.files('../data',full.names=T)
 
 
 #Read in individual data files
@@ -53,10 +53,19 @@ full_long <- rbind(ndvi,ndmi,ndsi) %>%
 
 What is the correlation between NDVI and NDMI? - here I want you to
 convert the full_long dataset in to a wide dataset using the 
-function "spread" and then make a plot that shows the correlation s a
+function "spread" and then make a plot that shows the correlation as a
 function of if the site was burned or not (x axis should be ndmi)
 You should exclude winter months and focus on summer months
 
+```{r}
+#make wide data format
+full_wide <- spread(data=full_long,key='data',value='value')
+
+
+  
+
+
+```
 
 
 ## Question 2 
