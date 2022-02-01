@@ -1,7 +1,7 @@
 ---
 title: "Hayman Fire Recovery"
 author: "Megan Sears"
-date: "2022-01-31"
+date: "`r Sys.Date()`"
 output: html_document
 ---
 
@@ -10,6 +10,7 @@ library(tidyverse)
 library(tidyr)
 library(ggthemes)
 library(lubridate)
+library(ggrepel)
 
 # Now that we have learned how to munge (manipulate) data
 # and plot it, we will work on using these skills in new ways
@@ -59,11 +60,18 @@ You should exclude winter months and focus on summer months
 
 ```{r}
 #make wide data format
-full_wide <- spread(data=full_long,key='data',value='value')
-
-
+full_wide <- spread(data=full_long,key='data',value='value') %>%
+  filter_if(is.numeric,all_vars(!is.na(.))) %>% 
+  mutate(month = month(DateTime),
+         year = year(DateTime))
   
 
+full_summer <- full_wide %>%
+  filter_if(is.numeric,all_vars(!is.na(.)))
+  
+
+ggplot(full_summer, aes(ndmi, ndvi, color=site)) +
+  geom_point()
 
 ```
 
@@ -74,18 +82,77 @@ full_wide <- spread(data=full_long,key='data',value='value')
  snow index) for January - April and average NDVI for June-August?
 In other words, does the previous year's snow cover influence vegetation
  growth for the following summer?
+ 
+```{r}
+#ndsi for burned and unburned combined
+ndsi_win <- full_wide %>%
+  filter(month %in% c(1,2,3,4)) %>%
+  group_by(year) %>%
+  summarize(si_avg = mean(ndsi))
+
+#ndvi for burned and unburned combined
+ndvi_summ <- full_wide %>% 
+  filter(month %in% c(6,7,8)) %>%
+  group_by(year) %>%
+  summarize(vi_avg = mean(ndvi))
+
+#join the 2 above
+q2_pt1 <- inner_join(ndsi_win, ndvi_summ, by=c("year"))
+
+#plot showing comparison of ndsi and ndvi for burn and unburn combined
+ggplot(q2_pt1, aes(x=si_avg, y=vi_avg)) +
+  geom_point(size=4) 
+
+#ndsi grouped by year and site
+ndsi_q2 <- full_wide %>%
+    filter(month %in% c(1,2,3,4)) %>%
+  group_by(year, site) %>%
+  summarize(si_avg = mean(ndsi))
+
+#ndvi grouped by year and site
+ndvi_q2 <- full_wide %>%
+  filter(month %in% c(6,7,8)) %>%
+  group_by(year, site) %>%
+  summarize(vi_avg = mean(ndvi))
+
+#ndvi and ndsi comparison by year and site for pre and post burn
+#this answers q3
+q2 <- inner_join(ndsi_q2, ndvi_q2, by=c("year", "site")) %>%
+  mutate(fire = if_else(year > 2003, "yes", "no"))
+
+ggplot(q2, aes(x=si_avg, y=vi_avg, color=site, shape=fire)) +
+  geom_point(size=4)
+
+#adding facet wrap to break out the burn and unburned - this answers q3
+ggplot(q2, aes(x=si_avg, y=vi_avg, shape=fire)) +
+  geom_point() +
+  facet_wrap(~site)
 
 
+```
+ 
 ## Q3
 
 How is the snow effect from question 2 different between pre- and post-burn
 and burned and unburned? 
 
+Answers included in the q2 chunk.
 
 ## Question 4
 
 What month is the greenest month on average? 
 
+```{r}
+#greenest month
+mean_summary <- full_wide %>%
+  group_by(month) %>% 
+  summarize(moavg_ndvi = mean(ndvi),
+            moavg_ndsi = mean(ndsi),
+            moavg_ndmi = mean(ndmi))
+
+mean_summary
+
+```
 
 
 
@@ -95,6 +162,40 @@ What month is the snowiest on average?
 
 
 ## Bonus Question: Redo all problems with `spread` and `gather` using modern tidyverse syntax. 
+
+```{r}
+####-----Reading in Data and Stacking it ----- ####
+#Reading in files
+files <- list.files('../data',full.names=T)
+
+
+#Read in individual data files
+ndmi <- read_csv(files[1]) %>% 
+  rename(burned=2,unburned=3) %>%
+  mutate(data='ndmi')
+
+ndsi <- read_csv(files[2]) %>% 
+  rename(burned=2,unburned=3) %>%
+  mutate(data='ndsi')
+
+ndvi <- read_csv(files[3])%>% 
+  rename(burned=2,unburned=3) %>%
+  mutate(data='ndvi')
+
+# Stack as a tidy dataset
+full_long <- rbind(ndvi,ndmi,ndsi) %>% 
+  pivot_longer(!c(DateTime, data), names_to="condition", values_to="value" ) %>%
+  filter(!is.na(value))
+
+#make wide data format
+full_wide <- full_long %>%
+  pivot_wider(names_from = data, values_from = value) %>% 
+  filter_if(is.numeric,all_vars(!is.na(.))) %>% 
+  mutate(month = month(DateTime),
+         year = year(DateTime))
+
+```
+
 
 
 ## Bonus Question: Use Climage Engine to pull the same data for the assignment, but updated with 2020/2021 data.
