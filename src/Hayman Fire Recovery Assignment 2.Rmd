@@ -22,7 +22,7 @@ knitr::opts_knit$set(root.dir='..')
 ```{r dataread, warning=F,message=F}
 ####-----Reading in Data and Stacking it ----- ####
 #Reading in files
-files <- list.files('../data',full.names=T)
+files <- list.files('data',full.names=T)
 
 
 #Read in individual data files
@@ -166,33 +166,33 @@ What month is the snowiest on average?
 ```{r}
 ####-----Reading in Data and Stacking it ----- ####
 #Reading in files
-files <- list.files('../data',full.names=T)
+#files <- list.files('../data',full.names=T)
 
 
 #Read in individual data files
-ndmi <- read_csv(files[1]) %>% 
-  rename(burned=2,unburned=3) %>%
-  mutate(data='ndmi')
+#ndmi <- read_csv(files[1]) %>% 
+#  rename(burned=2,unburned=3) %>%
+#  mutate(data='ndmi')
 
-ndsi <- read_csv(files[2]) %>% 
-  rename(burned=2,unburned=3) %>%
-  mutate(data='ndsi')
+#ndsi <- read_csv(files[2]) %>% 
+#  rename(burned=2,unburned=3) %>%
+#  mutate(data='ndsi')
 
-ndvi <- read_csv(files[3])%>% 
-  rename(burned=2,unburned=3) %>%
-  mutate(data='ndvi')
+#ndvi <- read_csv(files[3])%>% 
+#  rename(burned=2,unburned=3) %>%
+#  mutate(data='ndvi')
 
 # Stack as a tidy dataset
-full_long <- rbind(ndvi,ndmi,ndsi) %>% 
-  pivot_longer(!c(DateTime, data), names_to="condition", values_to="value" ) %>%
-  filter(!is.na(value))
+#full_long <- rbind(ndvi,ndmi,ndsi) %>% 
+#  pivot_longer(!c(DateTime, data), names_to="condition", values_to="value" ) %>%
+#  filter(!is.na(value))
 
 #make wide data format
-full_wide <- full_long %>%
-  pivot_wider(names_from = data, values_from = value) %>% 
-  filter_if(is.numeric,all_vars(!is.na(.))) %>% 
-  mutate(month = month(DateTime),
-         year = year(DateTime))
+#full_wide <- full_long %>%
+#  pivot_wider(names_from = data, values_from = value) %>% 
+#  filter_if(is.numeric,all_vars(!is.na(.))) %>% 
+#  mutate(month = month(DateTime),
+#         year = year(DateTime))
 
 ```
 
